@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24504"/>
+        <capability name="Map view configurations" minToolsVersion="14.0"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Ip List View Controller-->
+        <scene sceneID="s0d-6b-0kx">
+            <objects>
+                <viewController storyboardIdentifier="IpListViewController" id="Y6W-OH-hqX" customClass="IpListViewController" customModule="PruebaTecnicaIzzy" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="5EZ-qb-Rvc">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <searchBar contentMode="redraw" translatesAutoresizingMaskIntoConstraints="NO" id="jYJ-4X-xvN">
+                                <rect key="frame" x="15" y="118" width="363" height="64"/>
+                                <textInputTraits key="textInputTraits"/>
+                                <connections>
+                                    <outlet property="delegate" destination="Y6W-OH-hqX" id="Hm1-32-tBk"/>
+                                </connections>
+                            </searchBar>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="EfZ-jm-p1s">
+                                <rect key="frame" x="0.0" y="197" width="393" height="587"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                            </tableView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="vDu-zF-Fre"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="jYJ-4X-xvN" firstAttribute="leading" secondItem="vDu-zF-Fre" secondAttribute="leading" constant="15" id="BsX-4e-30V"/>
+                            <constraint firstItem="vDu-zF-Fre" firstAttribute="trailing" secondItem="EfZ-jm-p1s" secondAttribute="trailing" id="TLc-aq-a4i"/>
+                            <constraint firstItem="EfZ-jm-p1s" firstAttribute="leading" secondItem="vDu-zF-Fre" secondAttribute="leading" id="Z2k-sw-kUz"/>
+                            <constraint firstItem="vDu-zF-Fre" firstAttribute="bottom" secondItem="EfZ-jm-p1s" secondAttribute="bottom" id="eBg-J8-0Rz"/>
+                            <constraint firstItem="jYJ-4X-xvN" firstAttribute="top" secondItem="vDu-zF-Fre" secondAttribute="top" id="eS9-qr-thu"/>
+                            <constraint firstItem="EfZ-jm-p1s" firstAttribute="top" secondItem="jYJ-4X-xvN" secondAttribute="bottom" constant="15" id="feJ-tE-bQd"/>
+                            <constraint firstItem="vDu-zF-Fre" firstAttribute="trailing" secondItem="jYJ-4X-xvN" secondAttribute="trailing" constant="15" id="zMu-GQ-eEf"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="listIPTableView" destination="EfZ-jm-p1s" id="4co-GM-rcO"/>
+                        <outlet property="searchBar" destination="jYJ-4X-xvN" id="8nk-ja-mQ2"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Ief-a0-LHa" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="140" y="92"/>
+        </scene>
+        <!--Ip Location View Controller-->
+        <scene sceneID="Uzr-3p-Yoo">
+            <objects>
+                <viewController storyboardIdentifier="IpLocationViewController" id="wMi-xv-klY" customClass="IpLocationViewController" customModule="PruebaTecnicaIzzy" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="cdF-AQ-N86">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="G2K-IW-DzU">
+                                <rect key="frame" x="0.0" y="118" width="393" height="666"/>
+                                <standardMapConfiguration key="preferredConfiguration"/>
+                            </mapView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="tXc-HM-aB2"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="tXc-HM-aB2" firstAttribute="trailing" secondItem="G2K-IW-DzU" secondAttribute="trailing" id="XsO-sR-abC"/>
+                            <constraint firstItem="G2K-IW-DzU" firstAttribute="leading" secondItem="tXc-HM-aB2" secondAttribute="leading" id="kQ8-xP-fhz"/>
+                            <constraint firstItem="G2K-IW-DzU" firstAttribute="top" secondItem="tXc-HM-aB2" secondAttribute="top" id="sw9-TE-V2X"/>
+                            <constraint firstItem="tXc-HM-aB2" firstAttribute="bottom" secondItem="G2K-IW-DzU" secondAttribute="bottom" id="vmX-lI-lZf"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="mapMK" destination="G2K-IW-DzU" id="xYR-6q-QIx"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="ZGf-Cr-eFG" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1088" y="92"/>
+        </scene>
+    </scenes>
+    <resources>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>
