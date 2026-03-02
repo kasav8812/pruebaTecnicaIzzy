@@ -8,7 +8,7 @@ import UIKit
 
 protocol OnItemSelectedDelegate : NSObjectProtocol{
     func selectOption(mOption: IpListEntity)
-    func deleteOption(mPosition: Int)
+    func deleteOption(mID: String)
 }
 
 class IpsDataSource: NSObject, UITableViewDataSource, UITableViewDelegate {
@@ -85,7 +85,7 @@ class IpsDataSource: NSObject, UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let delete = UIContextualAction(style: .destructive, title: nil) { [weak self] _, _, completion in
             guard let self = self else { return }
-            self.mOnItemSelectedDelegate.deleteOption(mPosition: indexPath.row)
+            self.mOnItemSelectedDelegate.deleteOption(mID: self.mSectionsArray[indexPath.row].mId ?? "")
             completion(true)
         }
         delete.image = UIImage(systemName: "trash")

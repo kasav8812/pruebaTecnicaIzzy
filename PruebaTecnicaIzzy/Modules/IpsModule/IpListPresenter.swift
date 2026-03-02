@@ -19,6 +19,14 @@ class IpListPresenter {
 }
 
 extension IpListPresenter: IpList_ViewToPresenter {
+    func deleteElement(idIp: String) {
+        interactor?.deleteIp(idIp)
+    }
+    
+    func getAllIps() {
+        interactor?.fetchAllIps()
+    }
+    
     func gotoMap(name: String, lat: String, lon: String) {
         router.gotoMap(name, lat, lon)
     }
@@ -33,7 +41,7 @@ extension IpListPresenter: IpList_InteractorToPresenter {
         view?.showLoader()
     }
     
-    func retrieveIps(_ responseList: IpListEntity) {
+    func retrieveIps(_ responseList: [IpListEntity]) {
         view?.dismissLoader()
         view?.showListIps(responseList)
     }
@@ -48,21 +56,25 @@ extension IpListPresenter: IpList_InteractorToPresenter {
 
 protocol IpList_ViewToPresenter{
     func getIps(ipSearch: String)
+    func getAllIps()
     func gotoMap(name : String, lat:String, lon:String)
+    func deleteElement(idIp: String)
 }
 
 protocol IpList_PresenterToInteractor{
     func callApi(_ ip: String)
+    func fetchAllIps()
+    func deleteIp(_ idIp : String)
 }
 
 protocol IpList_InteractorToPresenter{
-    func retrieveIps(_ responseList: IpListEntity)
+    func retrieveIps(_ responseList: [IpListEntity])
     func showMessageError(errorMessage : String)
     func showLoader()
 }
 
 protocol IpList_PresenterToView{
-    func showListIps(_ responseList : IpListEntity)
+    func showListIps(_ responseList : [IpListEntity])
     func displayMessageError(errorMessage : String)
     func dismissLoader()
     func showLoader()

@@ -8,43 +8,67 @@
 import Foundation
 
 class WSManager{
+    private var activeRequests: [String: URLSessionDataTask] = [:]
+    private let requestQueue = DispatchQueue(label: "NetworkRequestQueue")
+    
     // MARK:
-    func request<T: Encodable, R: Decodable>(url: String, method: HTTPMethod, body: T? = nil, headers: [String: String] = [:], completion: @escaping (Result<R, NetworkError>) -> Void)
-    {
-        var request : URLRequest!
+    func request<T: Encodable, R: Decodable>(
+        url: String,
+        method: HTTPMethod,
+        body: T? = nil,
+        headers: [String: String] = [:],
+        completion: @escaping (Result<R, NetworkError>) -> Void
+    ) {
+        
+        let requestKey = "\(method.rawValue)-\(url)-\(String(describing: body))"
+        
+        requestQueue.sync {
+            if activeRequests[requestKey] != nil {
+                return
+            }
+        }
+        
+        guard NetworkMonitor.shared.isConnected else {
+            completion(.failure(.noInternet))
+            
+            NetworkMonitor.shared.onReconnect = { [weak self] in
+                self?.request(url: url, method: method, body: body, headers: headers, completion: completion)
+            }
+            return
+        }
+        
+        var urlRequest: URLRequest!
+        
         if method == .GET {
             guard var components = URLComponents(string: url) else {
                 completion(.failure(.invalidURL))
                 return
             }
-            if let request = body {
-                components.queryItems = QueryEncoder.encode(request)
+            
+            if let body = body {
+                components.queryItems = QueryEncoder.encode(body)
             }
             
             guard let finalURL = components.url else {
                 completion(.failure(.invalidURL))
                 return
             }
-            request = URLRequest(url: finalURL)
-            headers.forEach {
-                request.setValue($1, forHTTPHeaderField: $0)
-            }
-        }else{
-            guard let url = URL(string: url) else {
+            
+            urlRequest = URLRequest(url: finalURL)
+            
+        } else {
+            guard let finalURL = URL(string: url) else {
                 completion(.failure(.invalidURL))
                 return
             }
             
-            request = URLRequest(url: url)
-            request.httpMethod = method.rawValue
-            
-            headers.forEach { request.setValue($1, forHTTPHeaderField: $0) }
+            urlRequest = URLRequest(url: finalURL)
+            urlRequest.httpMethod = method.rawValue
             
             if let body = body {
                 do {
-                    request.httpBody = try JSONEncoder().encode(body)
-                    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                    print("Request Input", request as Any)
+                    urlRequest.httpBody = try JSONEncoder().encode(body)
+                    urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
                 } catch {
                     completion(.failure(.unknown))
                     return
@@ -52,8 +76,26 @@ class WSManager{
             }
         }
         
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
+        headers.forEach {
+            urlRequest.setValue($1, forHTTPHeaderField: $0)
+        }
+        
+        let task = URLSession.shared.dataTask(with: urlRequest) { [weak self] data, response, error in
+            
+            defer {
+                self?.requestQueue.sync {
+                }
+            }
+            
+            if let error = error as? URLError {
+                
+                if error.code == .notConnectedToInternet {
+                    DispatchQueue.main.async {
+                        completion(.failure(.noInternet))
+                    }
+                    return
+                }
+                
                 DispatchQueue.main.async {
                     completion(.failure(.connection(error)))
                 }
@@ -91,11 +133,14 @@ class WSManager{
                     completion(.failure(.decoding(error)))
                 }
             }
-            
-        }.resume()
+        }
+        
+        requestQueue.sync {
+            activeRequests[requestKey] = task
+        }
+        
+        task.resume()
     }
-    
-    
 }
 
 // MARK:
@@ -116,6 +161,7 @@ enum NetworkError: Error {
     case http(status: Int, data: Data?)
     case decoding(Error)
     case unknown
+    case noInternet
 }
 
 // MARK:

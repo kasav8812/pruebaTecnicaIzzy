@@ -14,11 +14,15 @@ class IpListRouter: IpList_RouterProtocol {
         let storyBoard: UIStoryboard = UIStoryboard(name: "IpListViewController", bundle: nil)
                        let view = storyBoard.instantiateViewController(withIdentifier: "IpListViewController") as! IpListViewController
         let interactor = IpListInteractor()
+        let repository = IpListRepository()
+
         let router = IpListRouter()
         let presenter = IpListPresenter(view: view,interactor: interactor, router: router)
         view.presenter = presenter
         router.viewController = view
         interactor.presenter = presenter
+        interactor.repository = repository
+        repository.presenter = presenter
         return view
     }
     

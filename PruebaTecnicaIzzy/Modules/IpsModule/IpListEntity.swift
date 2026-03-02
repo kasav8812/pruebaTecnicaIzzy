@@ -6,8 +6,10 @@
 //
 
 import Foundation
+import FirebaseFirestore
 
-struct IpListEntity: Decodable {
+struct IpListEntity : Codable {
+    var mId: String?
     let ip: String
     let location: Location
     let countryMetadata: CountryMetadata
@@ -16,6 +18,7 @@ struct IpListEntity: Decodable {
     let timeZone: TimeZoneInfo
 
     enum CodingKeys: String, CodingKey {
+        case mId = "id"
         case ip
         case location
         case countryMetadata = "country_metadata"
@@ -26,7 +29,7 @@ struct IpListEntity: Decodable {
 }
 
 
-struct Location: Decodable {
+struct Location: Codable {
     let continentCode: String
     let continentName: String
     let countryCode2: String
@@ -64,7 +67,7 @@ struct Location: Decodable {
     }
 }
 
-struct CountryMetadata: Decodable {
+struct CountryMetadata: Codable {
     let callingCode: String
     let tld: String
     let languages: [String]
@@ -76,13 +79,13 @@ struct CountryMetadata: Decodable {
     }
 }
 
-struct Currency: Decodable {
+struct Currency: Codable {
     let code: String
     let name: String
     let symbol: String
 }
 
-struct ASN: Decodable {
+struct ASN: Codable {
     let asNumber: String
     let organization: String
     let country: String
@@ -94,7 +97,7 @@ struct ASN: Decodable {
     }
 }
 
-struct TimeZoneInfo: Decodable {
+struct TimeZoneInfo: Codable {
     let name: String
     let offset: Int
     let offsetWithDst: Int
@@ -131,7 +134,7 @@ struct TimeZoneInfo: Decodable {
     }
 }
 
-struct DSTChange: Decodable {
+struct DSTChange: Codable {
     let utcTime: String
     let duration: String
     let gap: Bool

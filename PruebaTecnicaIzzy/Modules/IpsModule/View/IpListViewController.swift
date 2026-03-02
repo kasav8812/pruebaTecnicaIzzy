@@ -19,11 +19,12 @@ class IpListViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        addFilterButton()
+        addNewIpButton()
         prepareTableView()
         prepareSearchBar()
+        presenter?.getAllIps()
     }
-
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationItem.title = "IP List"
@@ -42,7 +43,7 @@ class IpListViewController: UIViewController {
         listIPTableView.reloadData()
     }
     
-    func addFilterButton(){
+    func addNewIpButton(){
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: nil, image: .add, target: self, action: #selector(lookUp))
     }
     
@@ -68,6 +69,7 @@ class IpListViewController: UIViewController {
     }
     
     @objc func refreshControl(_ sender: AnyObject){
+        presenter?.getAllIps()
         mRefreshControl.endRefreshing()
     }
     
@@ -125,8 +127,8 @@ extension IpListViewController: IpList_PresenterToView{
         loader?.stopAnimating()
     }
     
-    func showListIps(_ responseList: IpListEntity) {
-        listIps.append(responseList)
+    func showListIps(_ responseList: [IpListEntity]) {
+        listIps = responseList
         dataSource?.update(items: listIps)
     }
     
@@ -136,9 +138,8 @@ extension IpListViewController: IpList_PresenterToView{
 }
 
 extension IpListViewController: OnItemSelectedDelegate{
-    func deleteOption(mPosition : Int) {
-        self.listIps.remove(at: mPosition)
-        dataSource?.update(items: listIps)
+    func deleteOption(mID: String) {
+        presenter?.deleteElement(idIp: mID)
     }
     
     func selectOption(mOption: IpListEntity) {
