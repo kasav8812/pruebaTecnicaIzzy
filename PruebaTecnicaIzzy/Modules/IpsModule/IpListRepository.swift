@@ -40,8 +40,13 @@ class IpListRepository: NSObject {
     
     func deleteIp(_ id: String){
         Task{
-            try await Firestore.firestore().collection("BDTest").document(id).delete()
-            fetchIps()
+            do {
+                try await Firestore.firestore().collection("BDTest").document(id).delete()
+                fetchIps()
+            } catch {
+                presenter.showMessageError(errorMessage: error.localizedDescription)
+                print("Error writing document: \(error)")
+            }
         }
     }
     
