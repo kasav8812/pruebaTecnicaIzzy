@@ -60,7 +60,7 @@ class WSManager{
             print("=======================================================")
             print("Request API ", method.rawValue)
             print(request)
-            // Body
+
             if let body = body {
                 do {
                     printRequestJson(body: body, "Request")
@@ -89,7 +89,6 @@ class WSManager{
             } catch {
                 return .failure(.decodingError)
             }
-            
         } catch let error as URLError {
             
             if error.code == .timedOut {
@@ -158,9 +157,6 @@ struct QueryEncoder {
         }
     }
 }
-
-struct EmptyRequest: Encodable {}
-struct EmptyResponse: Decodable {}
 
 // MARK:
 enum NetworkError: Error {
