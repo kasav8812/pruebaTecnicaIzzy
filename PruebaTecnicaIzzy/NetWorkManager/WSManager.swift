@@ -16,7 +16,8 @@ class WSManager{
     
     private init() {
         let configuration = URLSessionConfiguration.default
-        configuration.timeoutIntervalForRequest = 15
+        configuration.timeoutIntervalForRequest = 60
+        configuration.timeoutIntervalForResource = 60
         configuration.waitsForConnectivity = true
         session = URLSession(configuration: configuration)
         
@@ -65,9 +66,9 @@ class WSManager{
             // Body
             if let body = body {
                 do {
-                    printRequestJson(body: body)
+                    printRequestJson(body: body, "Request")
                     request.httpBody = try JSONEncoder().encode(body)
-                    //request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
                 } catch {
                     return .failure(.encodingError)
                 }
@@ -89,6 +90,7 @@ class WSManager{
             
             do {
                 let decoded = try JSONDecoder().decode(R.self, from: data)
+                printRequestJson(body: decoded, "Response")
                 return .success(decoded)
             } catch {
                 return .failure(.decodingError)
@@ -137,14 +139,14 @@ private extension WSManager {
         retryQueue.append(block)
     }
     
-    func printRequestJson<T : Codable>(body: T) {
+    func printRequestJson<T : Codable>(body: T, _ title : String) {
         do {
             let encoder = JSONEncoder()
             encoder.outputFormatting = .prettyPrinted
             
             let data = try encoder.encode(body)
             let jsonString = String(data: data, encoding: .utf8)
-            print("Request Body")
+            print(title," Body")
             print(jsonString ?? "Error converting to String")
             print("=======================================================")
         } catch {
