@@ -59,19 +59,20 @@ class WSManager{
             request.httpMethod = method.rawValue
             headers.forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
             
+            print("=======================================================")
+            print("Request API ", method.rawValue)
+            print(request)
             // Body
             if let body = body {
                 do {
+                    printRequestJson(body: body)
                     request.httpBody = try JSONEncoder().encode(body)
-                    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                    //request.setValue("application/json", forHTTPHeaderField: "Content-Type")
                 } catch {
                     return .failure(.encodingError)
                 }
             }
-            print("=======================================================")
-            print("Request API ", method.rawValue)
-            print(request)
-            print("=======================================================")
+           
         }
         
           
@@ -134,6 +135,21 @@ private extension WSManager {
     
     func enqueueForRetry(_ block: @escaping () async -> Void) {
         retryQueue.append(block)
+    }
+    
+    func printRequestJson<T : Codable>(body: T) {
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            
+            let data = try encoder.encode(body)
+            let jsonString = String(data: data, encoding: .utf8)
+            print("Request Body")
+            print(jsonString ?? "Error converting to String")
+            print("=======================================================")
+        } catch {
+            print("Encoding error:", error)
+        }
     }
 }
 
