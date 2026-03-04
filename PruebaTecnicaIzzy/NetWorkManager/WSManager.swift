@@ -8,7 +8,6 @@
 import Foundation
 
 class WSManager{
-    
     private let session: URLSession
     private var retryQueue: [() async -> Void] = []
     private let maxRetries = 3
@@ -20,7 +19,6 @@ class WSManager{
         configuration.timeoutIntervalForResource = 60
         configuration.waitsForConnectivity = true
         session = URLSession(configuration: configuration)
-        
         setupReconnectListener()
     }
     
@@ -59,7 +57,6 @@ class WSManager{
         }else{
             request.httpMethod = method.rawValue
             headers.forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
-            
             print("=======================================================")
             print("Request API ", method.rawValue)
             print(request)
@@ -73,10 +70,7 @@ class WSManager{
                     return .failure(.encodingError)
                 }
             }
-           
         }
-        
-          
         do {
             let (data, response) = try await session.data(for: request)
             
@@ -111,7 +105,6 @@ class WSManager{
                 }
                 return .failure(.noConnection)
             }
-            
             return .failure(.unknown(error))
             
         } catch {

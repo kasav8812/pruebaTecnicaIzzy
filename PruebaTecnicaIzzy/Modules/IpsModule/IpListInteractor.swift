@@ -32,7 +32,7 @@ class IpListInteractor:NSObject, IpList_PresenterToInteractor {
         let params = ModelRequestTest(token: "7dE2SmhEJEgNqm9ddaPHZ2FfPDbxfFgVi1YvMa7VyAdRtTOhVFZJo6CyM", argumentos: args, apprequesttime: "1722554649480.849121")
         
         Task {
-            let result : Result<ModelResponseTest, NetworkError> = await WSManager.shared.request(url: APIDefinitions.WS_GET_POST,method: HTTPMethod.POST, body: params, headers: ["Authorization":"Bearer 479987c7-c264-375f-91d6-55346af3a529"], retries: 1)
+            let result : Result<ModelResponseTest, NetworkError> = await WSManager.shared.request(url: APIDefinitions.WS_GET_ip,method: HTTPMethod.POST, body: params, headers: ["Authorization":"Bearer 479987c7-c264-375f-91d6-55346af3a529"], retries: 1)
             switch result {
             case .success(let response):
                 print("Success:", response)
