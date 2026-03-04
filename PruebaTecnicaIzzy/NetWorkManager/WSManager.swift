@@ -8,41 +8,38 @@
 import Foundation
 
 class WSManager{
-    private var activeRequests: [String: URLSessionDataTask] = [:]
-    private let requestQueue = DispatchQueue(label: "NetworkRequestQueue")
     
-    // MARK:
-    func request<T: Encodable, R: Decodable>(
-        url: String,
-        method: HTTPMethod,
-        body: T? = nil,
-        headers: [String: String] = [:],
-        completion: @escaping (Result<R, NetworkError>) -> Void
-    ) {
+    private let session: URLSession
+    private var retryQueue: [() async -> Void] = []
+    private let maxRetries = 3
+    static let shared = WSManager()
+    
+    private init() {
+        let configuration = URLSessionConfiguration.default
+        configuration.timeoutIntervalForRequest = 15
+        configuration.waitsForConnectivity = true
+        session = URLSession(configuration: configuration)
         
-        let requestKey = "\(method.rawValue)-\(url)-\(String(describing: body))"
-        
-        requestQueue.sync {
-            if activeRequests[requestKey] != nil {
-                return
-            }
+        setupReconnectListener()
+    }
+    
+    func request<T: Codable, R: Codable>(url: String, method: HTTPMethod, body: T? = nil, headers: [String: String] = [:],retries: Int = 0) async -> Result<R, NetworkError> {
+        guard let url = URL(string: url) else {
+            return .failure(.invalidURL)
         }
         
-        guard NetworkMonitor.shared.isConnected else {
-            completion(.failure(.noInternet))
-            
-            NetworkMonitor.shared.onReconnect = { [weak self] in
-                self?.request(url: url, method: method, body: body, headers: headers, completion: completion)
+        if !NetworkMonitor.shared.isConnected {
+            enqueueForRetry {
+                let _ : Result<R, NetworkError> = await self.request(url: url.absoluteString,method: method, body: body, headers: headers)
             }
-            return
+            return .failure(.noConnection)
         }
         
-        var urlRequest: URLRequest!
+        var request = URLRequest(url: url)
         
         if method == .GET {
-            guard var components = URLComponents(string: url) else {
-                completion(.failure(.invalidURL))
-                return
+            guard var components = URLComponents(string: url.absoluteString) else {
+                return .failure(.invalidURL)
             }
             
             if let body = body {
@@ -50,96 +47,95 @@ class WSManager{
             }
             
             guard let finalURL = components.url else {
-                completion(.failure(.invalidURL))
-                return
+                return .failure(.invalidURL)
             }
             
-            urlRequest = URLRequest(url: finalURL)
+            request = URLRequest(url: finalURL)
+            print("=======================================================")
+            print("Request API ", method.rawValue)
+            print(request)
+            print("=======================================================")
+        }else{
             
-        } else {
-            guard let finalURL = URL(string: url) else {
-                completion(.failure(.invalidURL))
-                return
-            }
+            request.httpMethod = method.rawValue
             
-            urlRequest = URLRequest(url: finalURL)
-            urlRequest.httpMethod = method.rawValue
+            headers.forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
             
+            // Body
             if let body = body {
                 do {
-                    urlRequest.httpBody = try JSONEncoder().encode(body)
-                    urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                    request.httpBody = try JSONEncoder().encode(body)
+                    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
                 } catch {
-                    completion(.failure(.unknown))
-                    return
+                    return .failure(.encodingError)
                 }
             }
         }
         
-        headers.forEach {
-            urlRequest.setValue($1, forHTTPHeaderField: $0)
-        }
+        print("=======================================================")
+        print("Request API ", method.rawValue)
+        print(request)
+        print("=======================================================")
         
-        let task = URLSession.shared.dataTask(with: urlRequest) { [weak self] data, response, error in
+        do {
+            let (data, response) = try await session.data(for: request)
             
-            defer {
-                self?.requestQueue.sync {
-                }
+            guard let httpResponse = response as? HTTPURLResponse else {
+                return .failure(.unknown(NSError()))
             }
             
-            if let error = error as? URLError {
-                
-                if error.code == .notConnectedToInternet {
-                    DispatchQueue.main.async {
-                        completion(.failure(.noInternet))
-                    }
-                    return
-                }
-                
-                DispatchQueue.main.async {
-                    completion(.failure(.connection(error)))
-                }
-                return
-            }
-            
-            guard let http = response as? HTTPURLResponse else {
-                DispatchQueue.main.async {
-                    completion(.failure(.unknown))
-                }
-                return
-            }
-            
-            guard (200...299).contains(http.statusCode) else {
-                DispatchQueue.main.async {
-                    completion(.failure(.http(status: http.statusCode, data: data)))
-                }
-                return
-            }
-            
-            guard let data = data else {
-                DispatchQueue.main.async {
-                    completion(.failure(.unknown))
-                }
-                return
+            guard 200...299 ~= httpResponse.statusCode else {
+                return .failure(.httpError(statusCode: httpResponse.statusCode))
             }
             
             do {
                 let decoded = try JSONDecoder().decode(R.self, from: data)
-                DispatchQueue.main.async {
-                    completion(.success(decoded))
-                }
+                return .success(decoded)
             } catch {
-                DispatchQueue.main.async {
-                    completion(.failure(.decoding(error)))
+                return .failure(.decodingError)
+            }
+            
+        } catch let error as URLError {
+            
+            if error.code == .timedOut {
+                if retries < maxRetries {
+                    return await self.request( url: url.absoluteString, method: method, body: body, headers: headers,retries: retries + 1)
                 }
+                return .failure(.timeout)
+            }
+            
+            if error.code == .notConnectedToInternet {
+                enqueueForRetry {
+                    let _ : Result<R, NetworkError> = await self.request(url: url.absoluteString, method: method, body: body, headers: headers)
+                }
+                return .failure(.noConnection)
+            }
+            
+            return .failure(.unknown(error))
+            
+        } catch {
+            return .failure(.unknown(error))
+        }
+    }
+    
+}
+private extension WSManager {
+    
+    func setupReconnectListener() {
+        NetworkMonitor.shared.onReconnect = { [weak self] in
+            guard let self = self else { return }
+            
+            Task {
+                for task in self.retryQueue {
+                    await task()
+                }
+                self.retryQueue.removeAll()
             }
         }
-        
-        requestQueue.sync {
-            activeRequests[requestKey] = task
-        }
-        
-        task.resume()
+    }
+    
+    func enqueueForRetry(_ block: @escaping () async -> Void) {
+        retryQueue.append(block)
     }
 }
 
@@ -154,14 +150,19 @@ struct QueryEncoder {
     }
 }
 
+struct EmptyRequest: Encodable {}
+struct EmptyResponse: Decodable {}
+
 // MARK:
 enum NetworkError: Error {
     case invalidURL
-    case connection(Error)
-    case http(status: Int, data: Data?)
-    case decoding(Error)
-    case unknown
-    case noInternet
+    case invalidParameters
+    case encodingError
+    case decodingError
+    case timeout
+    case noConnection
+    case httpError(statusCode: Int)
+    case unknown(Error)
 }
 
 // MARK:
