@@ -14,7 +14,7 @@ class IpListInteractor:NSObject, IpList_PresenterToInteractor {
         presenter.showLoader()
         let params = IpListRequest(apiKey: "f0fdac54b7874dd49edd1ba3e4b2f47f" , ip: ip)
         Task {
-            let result : Result<IpListEntity, NetworkError> = await WSManager.shared.request(url: APIDefinitions.WS_GET_ip,method: HTTPMethod.GET, body: params, headers: ["Content-Type": "application/json"], retries: 2)
+            let result : Result<IpListEntity, NetworkError> = await WSManager.shared.request(url: APIDefinitions.WS_GET_ip,method: HTTPMethod.GET, body: params, headers: ["Content-Type": "application/json"], retries: 1)
             switch result {
             case .success(let response):
                 self.repository.addIpToFireStore(response)

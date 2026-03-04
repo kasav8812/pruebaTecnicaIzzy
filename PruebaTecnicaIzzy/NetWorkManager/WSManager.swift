@@ -56,9 +56,7 @@ class WSManager{
             print(request)
             print("=======================================================")
         }else{
-            
             request.httpMethod = method.rawValue
-            
             headers.forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
             
             // Body
@@ -70,13 +68,13 @@ class WSManager{
                     return .failure(.encodingError)
                 }
             }
+            print("=======================================================")
+            print("Request API ", method.rawValue)
+            print(request)
+            print("=======================================================")
         }
         
-        print("=======================================================")
-        print("Request API ", method.rawValue)
-        print(request)
-        print("=======================================================")
-        
+          
         do {
             let (data, response) = try await session.data(for: request)
             
