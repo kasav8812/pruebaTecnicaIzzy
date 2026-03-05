@@ -35,6 +35,8 @@ class WSManager{
         }
         
         var request = URLRequest(url: url)
+        request.httpMethod = method.rawValue
+        headers.forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
         
         if method == .GET {
             guard var components = URLComponents(string: url.absoluteString) else {
@@ -55,8 +57,7 @@ class WSManager{
             print(request)
             print("=======================================================")
         }else{
-            request.httpMethod = method.rawValue
-            headers.forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
+         
             print("=======================================================")
             print("Request API ", method.rawValue)
             print(request)
@@ -71,6 +72,10 @@ class WSManager{
                 }
             }
         }
+        
+        print("Headers ", headers)
+        print("=======================================================")
+        
         do {
             let (data, response) = try await session.data(for: request)
             

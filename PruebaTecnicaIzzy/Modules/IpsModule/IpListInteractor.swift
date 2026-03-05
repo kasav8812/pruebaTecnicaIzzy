@@ -24,7 +24,6 @@ class IpListInteractor:NSObject, IpList_PresenterToInteractor {
                 print("Error:", error)
             }
         }
-        callApiPost()
     }
     
     func callApiPost(){
